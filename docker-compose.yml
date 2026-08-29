@@ -1,0 +1,57 @@
+name: socialos
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: socialos_app
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: socialos
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U socialos_app"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile      # same image as the Render blueprint deploy
+    environment:
+      SOCIALOS_DATABASE_URL: postgresql+psycopg://socialos_app:change-me@db:5432/socialos
+      SOCIALOS_QUEUE_BACKEND: redis
+      SOCIALOS_REDIS_URL: redis://redis:6379/0
+      SOCIALOS_MOCK_CONNECTORS: "true"
+      SOCIALOS_AUTO_SEED: "false"
+    env_file: [.env]
+    ports: ["8000:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
+
+  migrate:
+    image: postgres:16-alpine
+    profiles: ["tools"]
+    volumes:
+      - ./backend/app/db/migrations:/migrations:ro
+    entrypoint: >
+      sh -c "until pg_isready -h db -U socialos_app; do sleep 1; done;
+             psql $$PSQL_DSN -f /migrations/0001_init.sql"
+    environment:
+      PSQL_DSN: postgresql://socialos_app:change-me@db:5432/socialos
+    depends_on:
+      db: {condition: service_healthy}
+
+  adminer:
+    image: adminer:latest
+    ports: ["8081:8080"]
+    depends_on: [db]
+
+volumes:
+  pgdata:

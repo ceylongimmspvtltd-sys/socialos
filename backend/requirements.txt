@@ -1,0 +1,12 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+pydantic>=2.7
+pydantic-settings>=2.3
+httpx>=0.27
+cryptography>=42.0
+redis>=5.0
+tzdata>=2024.1
+pytest>=8.0
+pytest-asyncio>=0.23
+psycopg[binary]>=3.1        # PostgreSQL driver (Render/RDS/compose prod; harmless in demo)
