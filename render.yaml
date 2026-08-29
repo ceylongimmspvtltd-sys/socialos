@@ -1,28 +1,17 @@
-# Render.com Blueprint — free-tier auto-deploy for C Tech SocialOS
-# 1) Push this repo to GitHub  2) render.com -> New -> Blueprint -> pick repo -> Apply
-#
-# Spec notes:
-#  - runtime: docker      -> build context = rootDir (backend/), Dockerfile = backend/Dockerfile (Render default ./Dockerfile)
-#  - plan: free           -> no credit card; web service binds $PORT (default 10000)
-#  - healthCheckPath      -> /health returns 200 immediately after startup (no auth required)
-#
-# Postgres upgrade path (optional, when outgrowing free tier):
-#  Render dashboard -> New -> PostgreSQL -> copy Internal Database URL ->
-#  add envVar SOCIALOS_DATABASE_URL=<url> (psycopg driver auto-normalized at runtime)
+# C Tech SocialOS — Render Blueprint (minimal, free-tier safe)
 services:
   - type: web
     name: socialos-api
     runtime: docker
-    rootDir: backend                # build context; Dockerfile defaults to ./Dockerfile inside it
+    rootDir: backend
     plan: free
-    healthCheckPath: /health
-    autoDeploy: true                # push to GitHub main -> auto re-deploy
+    autoDeploy: true
     envVars:
       - key: SOCIALOS_AUTO_SEED
         value: "true"
       - key: SOCIALOS_MOCK_CONNECTORS
-        value: "true"               # flip to "false" + add platform API keys for live publishing
+        value: "true"
       - key: SOCIALOS_WORKER_ENABLED
         value: "true"
       - key: SOCIALOS_LLM_PROVIDER
-        value: "template"           # or "openai" + SOCIALOS_OPENAI_API_KEY
+        value: "template"
